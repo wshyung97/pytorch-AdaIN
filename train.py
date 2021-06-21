@@ -9,6 +9,7 @@ from PIL import Image, ImageFile
 from tensorboardX import SummaryWriter
 from torchvision import transforms
 from tqdm import tqdm
+import numpy as np
 
 import net
 from sampler import InfiniteSamplerWrapper
@@ -32,14 +33,14 @@ class FlatFolderDataset(data.Dataset):
     def __init__(self, root, transform):
         super(FlatFolderDataset, self).__init__()
         self.root = root
-        self.paths = list(Path(self.root).glob('*'))
+        self.paths = list(Path(self.root).glob('*.png')) + list(Path(self.root).glob('*.jpg')) + list(Path(self.root).glob('*.jpeg'))
         self.transform = transform
 
     def __getitem__(self, index):
         path = self.paths[index]
-        img = Image.open(str(path)).convert('RGB')
+        img = Image.open(str(path))
         img = self.transform(img)
-        return img
+        return img[:3,...]
 
     def __len__(self):
         return len(self.paths)
@@ -61,6 +62,12 @@ parser.add_argument('--content_dir', type=str, required=True,
                     help='Directory path to a batch of content images')
 parser.add_argument('--style_dir', type=str, required=True,
                     help='Directory path to a batch of style images')
+#parser.add_argument('--content_dir', type=str, default='./input/JSU/',
+#                    help='Directory path to a batch of content images')
+#parser.add_argument('--style_dir', type=str, default='./input/SYB/',
+#                    help='Directory path to a batch of style images')
+
+
 parser.add_argument('--vgg', type=str, default='models/vgg_normalised.pth')
 
 # training options
@@ -70,12 +77,12 @@ parser.add_argument('--log_dir', default='./logs',
                     help='Directory to save the log')
 parser.add_argument('--lr', type=float, default=1e-4)
 parser.add_argument('--lr_decay', type=float, default=5e-5)
-parser.add_argument('--max_iter', type=int, default=160000)
+parser.add_argument('--max_iter', type=int, default=9000)
 parser.add_argument('--batch_size', type=int, default=8)
 parser.add_argument('--style_weight', type=float, default=10.0)
 parser.add_argument('--content_weight', type=float, default=1.0)
 parser.add_argument('--n_threads', type=int, default=16)
-parser.add_argument('--save_model_interval', type=int, default=10000)
+parser.add_argument('--save_model_interval', type=int, default=1000)
 args = parser.parse_args()
 
 device = torch.device('cuda')
@@ -132,5 +139,5 @@ for i in tqdm(range(args.max_iter)):
         for key in state_dict.keys():
             state_dict[key] = state_dict[key].to(torch.device('cpu'))
         torch.save(state_dict, save_dir /
-                   'decoder_iter_{:d}.pth.tar'.format(i + 1))
+                   'decoder_iter_{:d}.pth'.format(i + 1))
 writer.close()

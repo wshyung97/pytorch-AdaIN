@@ -56,10 +56,10 @@ parser.add_argument('--vgg', type=str, default='models/vgg_normalised.pth')
 parser.add_argument('--decoder', type=str, default='models/decoder.pth')
 
 # Additional options
-parser.add_argument('--content_size', type=int, default=512,
+parser.add_argument('--content_size', type=int, default=200,
                     help='New (minimum) size for the content image, \
                     keeping the original size if set to 0')
-parser.add_argument('--style_size', type=int, default=512,
+parser.add_argument('--style_size', type=int, default=224,
                     help='New (minimum) size for the style image, \
                     keeping the original size if set to 0')
 parser.add_argument('--crop', action='store_true',
@@ -94,7 +94,7 @@ if args.content:
     content_paths = [Path(args.content)]
 else:
     content_dir = Path(args.content_dir)
-    content_paths = [f for f in content_dir.glob('*')]
+    content_paths = [f for f in content_dir.glob('*.png')] + [f for f in content_dir.glob('*.jpg')]
 
 # Either --style or --styleDir should be given.
 assert (args.style or args.style_dir)
@@ -110,7 +110,7 @@ if args.style:
         interpolation_weights = [w / sum(weights) for w in weights]
 else:
     style_dir = Path(args.style_dir)
-    style_paths = [f for f in style_dir.glob('*')]
+    style_paths = [f for f in style_dir.glob('*.png')] + [f for f in style_dir.glob('*.jpg')]
 
 decoder = net.decoder
 vgg = net.vgg
@@ -133,8 +133,8 @@ for content_path in content_paths:
         style = torch.stack([style_tf(Image.open(str(p))) for p in style_paths])
         content = content_tf(Image.open(str(content_path))) \
             .unsqueeze(0).expand_as(style)
-        style = style.to(device)
-        content = content.to(device)
+        style = style[:3,...].to(device)
+        content = content[:3,...].to(device)
         with torch.no_grad():
             output = style_transfer(vgg, decoder, content, style,
                                     args.alpha, interpolation_weights)
@@ -149,13 +149,12 @@ for content_path in content_paths:
             style = style_tf(Image.open(str(style_path)))
             if args.preserve_color:
                 style = coral(style, content)
-            style = style.to(device).unsqueeze(0)
-            content = content.to(device).unsqueeze(0)
+            style = style[:3,...].to(device).unsqueeze(0)
+            content = content[:3,...].to(device).unsqueeze(0)
             with torch.no_grad():
-                output = style_transfer(vgg, decoder, content, style,
-                                        args.alpha)
+                output = style_transfer(vgg, decoder, content, style, args.alpha)
             output = output.cpu()
 
-            output_name = output_dir / '{:s}_stylized_{:s}{:s}'.format(
+            output_name = output_dir / '{:s}_by_{:s}{:s}'.format(
                 content_path.stem, style_path.stem, args.save_ext)
             save_image(output, str(output_name))
