@@ -61,4 +61,4 @@ I share the model trained by this code [here](https://drive.google.com/open?id=1
 - [2]: [Original implementation in Torch](https://github.com/xunhuang1995/AdaIN-style)
 
 ### Changes by Wooseok Hyung
-1. Iteration changed to 9000 for time purpose, and output image size changed from 512*512 to 224*224 for training Resnet.
+1. Iteration changed to 9000 for time purpose, and output image size changed from 512x512 to 224x224 for training Resnet.
