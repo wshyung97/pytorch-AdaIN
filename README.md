@@ -58,3 +58,6 @@ I share the model trained by this code [here](https://drive.google.com/open?id=1
 ## References
 - [1]: X. Huang and S. Belongie. "Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization.", in ICCV, 2017.
 - [2]: [Original implementation in Torch](https://github.com/xunhuang1995/AdaIN-style)
+
+### Changes by Wooseok Hyung
+1. Iteration changed to 9000 for time purpose, and output image size changed from 512*512 to 224*224 for training Resnet.
